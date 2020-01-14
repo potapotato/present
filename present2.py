@@ -3,6 +3,8 @@
 time:2020/1/14 12:50
 """
 
+import wx
+
 
 def addRoundKey(i_state, key):
     """
@@ -93,25 +95,44 @@ def dex_to_format_bin(value):
     return result
 
 
+class MyFrame(wx.Frame):
+    def __init__(self, superion):
+        wx.Frame.__init__(self, parent=superion, title='present加密', size=(400, 250))
+        panel = wx.Panel(self)  # 创建面板.
+
+        wx.StaticText(parent=panel, label='请输入明文:', pos=(30, 10))
+        wx.StaticText(parent=panel, label='请输入密钥:', pos=(30, 50))
+        wx.StaticText(parent=panel, label='暗 文：', pos=(30, 90))
+
+        self.txt_op1 = wx.TextCtrl(parent=panel, pos=(140, 10), size=(200, 20))
+        self.txt_op2 = wx.TextCtrl(parent=panel, pos=(140, 50), size=(200, 20))
+        self.txt_res = wx.TextCtrl(parent=panel, pos=(140, 90), style=wx.TE_READONLY, size=(200, 20))
+
+        self.btn_encode = wx.Button(parent=panel, label='加 密', pos=(100, 140))
+        self.Bind(wx.EVT_BUTTON, self.On_btn_encode, self.btn_encode)
+
+    def On_btn_encode(self, event):
+        plaintext = self.txt_op1.GetValue()  # 返回文本框的内容.
+        key_register = self.txt_op2.GetValue()  # 返回文本框的内容.
+        # 转成2进制
+        bin_plaintext = dex_to_format_bin(plaintext)
+        state = list(map(int, list(bin_plaintext)))
+        # 第一次密钥生成
+        bin_key = dex_to_format_bin(key_register)
+        ki = list(map(int, list(bin_key)))
+
+        for i in range(0, 31):
+            state = addRoundKey(state, ki)
+            state = more_sbox(state)
+            state = pLayer(state)
+
+            ki = generateRoundKeys(ki, i + 1)
+
+        addRoundKey(state, ki)
+        self.txt_res.SetValue(hex(int("".join(map(str, state)), 2)).replace("0x", ""))
+
+
 if __name__ == '__main__':
-    # plaintext = "0000000000000000"
-    # key_register = "ffffffffffffffffffff"
-    plaintext = input("请输入16位16进制明文:")
-    key_register = input("请输入20位16进制密钥:")
-    # 转成2进制
-    bin_plaintext = dex_to_format_bin(plaintext)
-    state = list(map(int, list(bin_plaintext)))
-    # 第一次密钥生成
-    bin_key = dex_to_format_bin(key_register)
-    ki = list(map(int, list(bin_key)))
-
-    for i in range(0, 31):
-        state = addRoundKey(state, ki)
-        state = more_sbox(state)
-        state = pLayer(state)
-
-        ki = generateRoundKeys(ki, i + 1)
-
-    addRoundKey(state, ki)
-    print("暗文:", end=" ")
-    print(hex(int("".join(map(str, state)), 2)).replace("0x", ""))
+    app = wx.App()
+    MyFrame(None).Show()
+    app.MainLoop()
