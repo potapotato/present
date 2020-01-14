@@ -94,8 +94,10 @@ def dex_to_format_bin(value):
 
 
 if __name__ == '__main__':
-    plaintext = "0000000000000000"
-    key_register = "ffffffffffffffffffff"
+    # plaintext = "0000000000000000"
+    # key_register = "ffffffffffffffffffff"
+    plaintext = input("请输入16位16进制明文:")
+    key_register = input("请输入20位16进制密钥:")
     # 转成2进制
     bin_plaintext = dex_to_format_bin(plaintext)
     state = list(map(int, list(bin_plaintext)))
@@ -111,4 +113,5 @@ if __name__ == '__main__':
         ki = generateRoundKeys(ki, i + 1)
 
     addRoundKey(state, ki)
+    print("暗文:", end=" ")
     print(hex(int("".join(map(str, state)), 2)).replace("0x", ""))
